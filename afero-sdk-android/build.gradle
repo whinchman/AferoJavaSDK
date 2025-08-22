@@ -5,19 +5,26 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 30
+    namespace 'io.afero.sdk.android'
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 30
+        minSdk 21
+        targetSdk 35
         versionCode 1
         versionName rootProject.version
     }
+    
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 }
 
@@ -26,21 +33,22 @@ dependencies {
 
     implementation project(path: ':afero-sdk-core')
 
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
 }
 
 
 // build a jar with source files
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
 task javadoc(type: Javadoc) {
     failOnError false
     source = android.sourceSets.main.java.sourceFiles
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.compile
+    classpath += configurations.implementation
     android.libraryVariants.all { variant ->
         if (variant.name == 'release') {
             classpath += variant.javaCompileProvider.get().classpath
@@ -49,7 +57,7 @@ task javadoc(type: Javadoc) {
 }
 // build a jar with javadoc
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 

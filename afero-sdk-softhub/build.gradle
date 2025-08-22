@@ -5,17 +5,20 @@
 apply plugin: 'com.android.library'
 
 repositories {
-    maven {
-        url "https://afero.jfrog.io/afero/hubby-android"
-        credentials {
-            username project.aferoArtifactoryUserName
-            password project.aferoArtifactoryPassword
-        }
-        authentication {
-            basic(BasicAuthentication)
-        }
-        metadataSources {
-            artifact()
+    // Only add Artifactory repository if credentials are available
+    if (project.hasProperty('aferoArtifactoryUserName') && project.hasProperty('aferoArtifactoryPassword')) {
+        maven {
+            url "https://afero.jfrog.io/afero/hubby-android"
+            credentials {
+                username project.aferoArtifactoryUserName
+                password project.aferoArtifactoryPassword
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+            metadataSources {
+                artifact()
+            }
         }
     }
 }
@@ -24,11 +27,12 @@ final String hubbyVersion = "1.0.957"
 final String hubType = project.findProperty('aferoSofthubType') ?: '"CONSUMER"'
 
 android {
-    compileSdkVersion 30
+    namespace 'io.afero.sdk.softhub'
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 30
+        minSdk 21
+        targetSdk 35
 
         versionCode 1
         versionName rootProject.version
@@ -42,6 +46,15 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    
+    buildFeatures {
+        buildConfig = true
     }
 }
 
@@ -64,14 +77,14 @@ dependencies {
 // build a jar with source files
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
 task javadoc(type: Javadoc) {
     failOnError false
     source = android.sourceSets.main.java.sourceFiles
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.compile
+    classpath += configurations.implementation
     android.libraryVariants.all { variant ->
         if (variant.name == 'release') {
             classpath += variant.javaCompileProvider.get().classpath
@@ -81,7 +94,7 @@ task javadoc(type: Javadoc) {
 
 // build a jar with javadoc
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
 

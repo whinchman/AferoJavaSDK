@@ -26,6 +26,9 @@ public class ResourceLoader {
 
     public <T> T createObjectFromJSONResource(String path, Class<T> valueType) throws IOException {
         InputStream is = getClass().getClassLoader().getResourceAsStream(pathPrefix + path);
+        if (is == null) {
+            throw new IOException("Resource not found: " + pathPrefix + path);
+        }
         return objectMapper.readValue(is, valueType);
     }
 }
