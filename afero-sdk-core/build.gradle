@@ -36,28 +36,29 @@ task copyResourcesDirectoryToClasses(type: Copy){
 
 testClasses.dependsOn copyResourcesDirectoryToClasses
 
-publishing {
-    publications {
-        jar(MavenPublication) {
-            version = rootProject.version
-            artifactId project.getName()
-            groupId rootProject.group
-
-            artifact("$buildDir/libs/${project.getName()}.jar")
-//            artifact packageJavadoc
-
-            pom.withXml {
-                def dependencies = asNode().appendNode('dependencies')
-                configurations.getByName("runtimeClasspath").getResolvedConfiguration().getFirstLevelModuleDependencies().each {
-                    def dependency = dependencies.appendNode('dependency')
-                    dependency.appendNode('groupId', it.moduleGroup)
-                    dependency.appendNode('artifactId', it.moduleName)
-                    dependency.appendNode('version', it.moduleVersion)
-                }
-            }
-        }
-    }
-}
+// Commented out for project dependency usage
+//publishing {
+//    publications {
+//        jar(MavenPublication) {
+//            version = rootProject.version
+//            artifactId project.getName()
+//            groupId rootProject.group
+//
+//            artifact("$buildDir/libs/${project.getName()}.jar")
+////            artifact packageJavadoc
+//
+//            pom.withXml {
+//                def dependencies = asNode().appendNode('dependencies')
+//                configurations.getByName("runtimeClasspath").getResolvedConfiguration().getFirstLevelModuleDependencies().each {
+//                    def dependency = dependencies.appendNode('dependency')
+//                    dependency.appendNode('groupId', it.moduleGroup)
+//                    dependency.appendNode('artifactId', it.moduleName)
+//                    dependency.appendNode('version', it.moduleVersion)
+//                }
+//            }
+//        }
+//    }
+//}
 
 javadoc {
     options.addStringOption('Xdoclint:none', '-quiet')

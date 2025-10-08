@@ -1,0 +1,48 @@
+image: openjdk:21
+
+pipelines:
+  tags:
+    'v*':  # Trigger on version tags like v2.0.0-community
+      - step:
+          name: Build and Release
+          caches:
+            - gradle
+          script:
+            - chmod +x gradlew
+            - ./gradlew clean build assembleRelease -PreleaseVersion=${BITBUCKET_TAG#v}
+            - mkdir -p releases
+            - cp build/afero-sdk-*.tar.gz releases/
+            # Upload to Bitbucket Downloads
+            - >
+              curl -X POST -u "${BITBUCKET_USERNAME}:${BITBUCKET_APP_PASSWORD}" 
+              -F "files=@releases/afero-sdk-${BITBUCKET_TAG#v}-community.tar.gz" 
+              "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads"
+          artifacts:
+            - releases/**
+  
+  branches:
+    main:
+      - step:
+          name: Test and Build
+          caches:
+            - gradle
+          script:
+            - chmod +x gradlew
+            - ./gradlew clean test build
+            
+  custom:
+    manual-release:
+      - step:
+          name: Manual Release Build
+          caches:
+            - gradle
+          script:
+            - chmod +x gradlew
+            - ./gradlew clean build assembleRelease
+          artifacts:
+            - build/bitbucket-release/**
+            - build/afero-sdk-*.tar.gz
+
+definitions:
+  caches:
+    gradle: ~/.gradle

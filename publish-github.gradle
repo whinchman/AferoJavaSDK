@@ -1,0 +1,173 @@
+// Android-focused release configuration for Bitbucket deployment
+// For IoT Espresso Maker communication via Android app
+
+task assembleAndroidRelease {
+    group = 'publishing'
+    description = 'Creates Android SDK release artifacts for Bitbucket deployment'
+    
+    // Only depend on core Java modules that don't need Android SDK
+    dependsOn ':afero-sdk-core:build'
+    dependsOn ':afero-sdk-client-retrofit2:build'
+    
+    doLast {
+        // Create release structure
+        delete "$buildDir/android-release"
+        
+        // Copy core SDK (pure Java - works everywhere)
+        copy {
+            from project(':afero-sdk-core').buildDir
+            include 'libs/*.jar'
+            into "$buildDir/android-release"
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            rename { filename ->
+                "afero-sdk-core-${version}.jar"
+            }
+        }
+        
+        // Copy Retrofit client (pure Java - for HTTP communication)
+        copy {
+            from project(':afero-sdk-client-retrofit2').buildDir
+            include 'libs/*.jar'
+            into "$buildDir/android-release"
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            rename { filename ->
+                "afero-sdk-retrofit2-${version}.jar"
+            }
+        }
+        
+        // Create Android-specific integration guide
+        file("$buildDir/android-release/README-Android.md").text = """
+# Afero SDK ${version} - Android Integration
+
+## For IoT Espresso Maker Communication
+
+### Quick Start
+1. Add JARs to your Android project's `libs/` folder
+2. Add to your `build.gradle`:
+   ```gradle
+   dependencies {
+       implementation files('libs/afero-sdk-core-${version}.jar')
+       implementation files('libs/afero-sdk-retrofit2-${version}.jar')
+       
+       // Required dependencies
+       implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+       implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
+       implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+       implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+       implementation 'io.reactivex:rxjava:1.3.8'
+       implementation 'io.reactivex:rxandroid:1.2.1'
+   }
+   ```
+
+### Basic Usage
+```java
+// Initialize SDK for your espresso maker
+AferoClient client = new AferoClient("your-api-endpoint");
+
+// Connect to your device
+DeviceCollection devices = new DeviceCollection(client);
+devices.start();
+
+// Listen for espresso maker events
+devices.observeChanges()
+    .subscribe(device -> {
+        // Handle brewing status, temperature, etc.
+        Log.d("EspressoMaker", "Device status: " + device.getStatus());
+    });
+```
+
+### Espresso Maker Specific Features
+- Device status monitoring (brewing, ready, error states)
+- Temperature control and monitoring  
+- Brew cycle management
+- Maintenance alerts
+- Remote brewing commands
+
+Updated: ${new Date().format('yyyy-MM-dd HH:mm:ss')}
+Generated from modernized SDK (JDK 21, Android SDK 35 compatible)
+"""
+        
+        // Create Gradle integration template
+        file("$buildDir/android-release/build.gradle.example").text = """
+// Example Android app build.gradle for Afero SDK integration
+
+android {
+    compileSdk 35
+    
+    defaultConfig {
+        minSdk 21
+        targetSdk 35
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
+
+dependencies {
+    // Afero SDK for IoT communication
+    implementation files('libs/afero-sdk-core-${version}.jar')
+    implementation files('libs/afero-sdk-retrofit2-${version}.jar')
+    
+    // Required dependencies (latest versions)
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'io.reactivex:rxjava:1.3.8'
+    implementation 'io.reactivex:rxandroid:1.2.1'
+    
+    // Standard Android dependencies
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+}
+"""
+        
+        // Create release archive optimized for Android development
+        ant.zip(destfile: "$buildDir/afero-sdk-android-${version}.zip") {
+            zipfileset(dir: "$buildDir/android-release", prefix: "afero-sdk-android-${version}")
+        }
+        
+        println ""
+        println "🚀 Android SDK Release Ready!"
+        println "📁 Location: $buildDir/android-release/"
+        println "📦 Archive: $buildDir/afero-sdk-android-${version}.zip"
+        println ""
+        println "📤 Upload to Bitbucket Downloads:"
+        println "   1. Go to your Bitbucket repository"
+        println "   2. Click 'Downloads' in left sidebar"  
+        println "   3. Upload: afero-sdk-android-${version}.zip"
+        println ""
+        println "☕ Ready for your Espresso Maker Android app!"
+    }
+}
+
+// Simplified task that doesn't require Android SDK
+task quickRelease {
+    group = 'publishing'
+    description = 'Quick release of core components only'
+    
+    dependsOn ':afero-sdk-core:jar'
+    dependsOn ':afero-sdk-client-retrofit2:jar'
+    
+    doLast {
+        copy {
+            from project(':afero-sdk-core').buildDir
+            from project(':afero-sdk-client-retrofit2').buildDir
+            include 'libs/*.jar'
+            into "$buildDir/quick-release"
+        }
+        
+        println "Quick release ready in: $buildDir/quick-release"
+    }
+}
+
+// Version with git tags
+version = project.hasProperty('releaseVersion') ? project.releaseVersion : 
+          "2.0.0-${new Date().format('yyyyMMdd')}-SNAPSHOT"
+
+allprojects {
+    group = 'io.afero.sdk.community'
+    version = rootProject.version
+}

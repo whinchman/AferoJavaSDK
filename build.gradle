@@ -162,3 +162,4 @@ gradle.projectsEvaluated {
         options.addMultilineStringsOption('linkoffline').setValue(linksOffline.values().toList())
     }
 }
+apply from: "publish-github.gradle"

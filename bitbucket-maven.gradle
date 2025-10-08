@@ -1,0 +1,50 @@
+// Add to your build.gradle files for Bitbucket Maven publishing
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            // ...existing publication config...
+            
+            groupId = 'io.afero.sdk.community'
+            artifactId = project.name
+            version = project.version
+        }
+    }
+    
+    repositories {
+        maven {
+            name = "BitbucketMaven"
+            url = "https://api.bitbucket.org/2.0/repositories/${bitbucketUser}/${bitbucketRepo}/src/main/maven-repo/"
+            
+            credentials {
+                username = project.findProperty("bitbucketUser") ?: System.getenv("BITBUCKET_USER")
+                password = project.findProperty("bitbucketAppPassword") ?: System.getenv("BITBUCKET_APP_PASSWORD")
+            }
+        }
+        
+        // Alternative: Use Bitbucket as a simple file server
+        maven {
+            name = "BitbucketDownloads"
+            url = "file://${buildDir}/maven-repo"
+        }
+    }
+}
+
+// Task to upload Maven repo to Bitbucket Downloads
+task uploadMavenRepo {
+    dependsOn publishAllPublicationsTobitbucketDownloadsRepository
+    
+    doLast {
+        exec {
+            commandLine 'tar', '-czf', "${buildDir}/maven-repo.tar.gz", '-C', "${buildDir}", 'maven-repo'
+        }
+        
+        // Upload via API
+        exec {
+            commandLine 'curl', '-X', 'POST',
+                       '-u', "${bitbucketUser}:${bitbucketAppPassword}",
+                       '-F', "files=@${buildDir}/maven-repo.tar.gz",
+                       "https://api.bitbucket.org/2.0/repositories/${bitbucketUser}/${bitbucketRepo}/downloads"
+        }
+    }
+}

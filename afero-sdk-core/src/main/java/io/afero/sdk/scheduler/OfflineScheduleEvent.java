@@ -34,6 +34,7 @@ public class OfflineScheduleEvent implements Comparable<OfflineScheduleEvent> {
 
     private static byte EVENT_FLAGS_REPEATS = 1;
     private static byte EVENT_FLAGS_USES_DEVICE_TIMEZONE = 2;
+    private static byte EVENT_FLAGS_DISABLED = 4;
 
     private static int compactFlag = 128;
     private static int saturdayBit = 1;
@@ -150,6 +151,18 @@ public class OfflineScheduleEvent implements Comparable<OfflineScheduleEvent> {
 
     public boolean getRepeats() {
         return (mFlags & EVENT_FLAGS_REPEATS) != 0;
+    }
+
+    public void setEnabled(boolean enabled) {
+        if (enabled) {
+            mFlags &= ~EVENT_FLAGS_DISABLED;  // Clear disabled bit when enabled
+        } else {
+            mFlags |= EVENT_FLAGS_DISABLED;   // Set disabled bit when disabled
+        }
+    }
+
+    public boolean getEnabled() {
+        return (mFlags & EVENT_FLAGS_DISABLED) == 0;  // Enabled when disabled bit is NOT set
     }
 
     @Deprecated
