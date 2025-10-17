@@ -28,11 +28,11 @@ final String hubType = project.findProperty('aferoSofthubType') ?: '"CONSUMER"'
 
 android {
     namespace 'io.afero.sdk.softhub'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         minSdk 21
-        targetSdk 34
+        targetSdk 33
 
         versionCode 1
         versionName rootProject.version
