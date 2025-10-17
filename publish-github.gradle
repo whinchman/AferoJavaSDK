@@ -84,7 +84,7 @@ devices.observeChanges()
 - Remote brewing commands
 
 Updated: ${new Date().format('yyyy-MM-dd HH:mm:ss')}
-Generated from modernized SDK (JDK 21, Android SDK 35 compatible)
+Generated from modernized SDK (JDK 21, Android SDK 34 compatible)
 """
         
         // Create Gradle integration template
@@ -92,11 +92,11 @@ Generated from modernized SDK (JDK 21, Android SDK 35 compatible)
 // Example Android app build.gradle for Afero SDK integration
 
 android {
-    compileSdk 35
-    
+    compileSdk 34
+
     defaultConfig {
         minSdk 21
-        targetSdk 35
+        targetSdk 34
     }
     
     compileOptions {
